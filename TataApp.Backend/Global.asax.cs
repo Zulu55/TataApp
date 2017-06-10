@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
-using System.Web;
+﻿using System.Data.Entity;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
+using TataApp.Backend.Helpers;
 
 namespace TataApp.Backend
 {
@@ -13,13 +10,19 @@ namespace TataApp.Backend
     {
         protected void Application_Start()
         {
-            Database.SetInitializer(
-                new MigrateDatabaseToLatestVersion<Models.DataContextLocal, 
-                                                   Migrations.Configuration>());
+            Database.SetInitializer(new MigrateDatabaseToLatestVersion<Models.DataContextLocal, Migrations.Configuration>());
+            CheckRolesAndSuperUser();
             AreaRegistration.RegisterAllAreas();
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+        }
+
+        private void CheckRolesAndSuperUser()
+        {
+            UsersHelper.CheckRole("Admin");
+            UsersHelper.CheckRole("Employee");
+            UsersHelper.CheckSuperUser();
         }
     }
 }

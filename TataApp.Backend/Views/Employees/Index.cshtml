@@ -4,7 +4,7 @@
     ViewBag.Title = "Index";
 }
 
-<h2>Index</h2>
+<h2>Employees</h2>
 
 <p>
     @Html.ActionLink("Create New", "Create")
@@ -12,16 +12,13 @@
 <table class="table">
     <tr>
         <th>
-            @Html.DisplayNameFor(model => model.DocumentType.Description)
+            Document Type
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.LoginType.Description)
+            Login Type
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.FirstName)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.LastName)
+            @Html.DisplayNameFor(model => model.FullName)
         </th>
         <th>
             @Html.DisplayNameFor(model => model.EmployeeCode)
@@ -53,10 +50,7 @@
             @Html.DisplayFor(modelItem => item.LoginType.Description)
         </td>
         <td>
-            @Html.DisplayFor(modelItem => item.FirstName)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.LastName)
+            @Html.DisplayFor(modelItem => item.FullName)
         </td>
         <td>
             @Html.DisplayFor(modelItem => item.EmployeeCode)
@@ -65,7 +59,10 @@
             @Html.DisplayFor(modelItem => item.Document)
         </td>
         <td>
-            @Html.DisplayFor(modelItem => item.Picture)
+            @if (!string.IsNullOrEmpty(item.Picture))
+            {
+                <img src="@Url.Content(item.Picture)" alt="Image" style="width:150px;height:150px;max-width: 100%; height: auto;" />
+            }
         </td>
         <td>
             @Html.DisplayFor(modelItem => item.Email)

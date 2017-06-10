@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Data.Entity;
 using System.Net;
-using System.Web;
+using System.Threading.Tasks;
 using System.Web.Mvc;
+using TataApp.Backend.Helpers;
 using TataApp.Backend.Models;
 using TataApp.Domain;
 
 namespace TataApp.Backend.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class EmployeesController : Controller
     {
         private DataContextLocal db = new DataContextLocal();
@@ -31,11 +27,14 @@ namespace TataApp.Backend.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Employee employee = await db.Employees.FindAsync(id);
+
+            var employee = await db.Employees.FindAsync(id);
+
             if (employee == null)
             {
                 return HttpNotFound();
             }
+
             return View(employee);
         }
 
@@ -48,22 +47,57 @@ namespace TataApp.Backend.Controllers
         }
 
         // POST: Employees/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create([Bind(Include = "EmployeeId,FirstName,LastName,EmployeeCode,DocumentTypeId,LoginTypeId,Document,Picture,Email,Phone,Address")] Employee employee)
+        public async Task<ActionResult> Create(EmployeeView view)
         {
             if (ModelState.IsValid)
             {
+                var pic = string.Empty;
+                var folder = "~/Content/Employees";
+
+                if (view.PictureFile != null)
+                {
+                    pic = FilesHelper.UploadPhoto(view.PictureFile, folder);
+                    pic = string.Format("{0}/{1}", folder, pic);
+                }
+
+                var employee = ToEmployee(view);
+                employee.Picture = pic;
                 db.Employees.Add(employee);
-                await db.SaveChangesAsync();
-                return RedirectToAction("Index");
+                var response = await DBHelper.SaveChanges(db);
+                if (response.Succeeded)
+                {
+                    UsersHelper.CreateUserASP(view.Email, "Employee", view.Password);
+                    return RedirectToAction("Index");
+                }
+
+                ModelState.AddModelError(string.Empty, response.Message);
             }
 
-            ViewBag.DocumentTypeId = new SelectList(db.DocumentTypes, "DocumentTypeId", "Description", employee.DocumentTypeId);
-            ViewBag.LoginTypeId = new SelectList(db.LoginTypes, "LoginTypeId", "Description", employee.LoginTypeId);
-            return View(employee);
+            ViewBag.DocumentTypeId = new SelectList(db.DocumentTypes, "DocumentTypeId", "Description", view.DocumentTypeId);
+            ViewBag.LoginTypeId = new SelectList(db.LoginTypes, "LoginTypeId", "Description", view.LoginTypeId);
+            return View(view);
+        }
+
+        private Employee ToEmployee(EmployeeView view)
+        {
+            return new Employee
+            {
+                Address = view.Address,
+                Document = view.Document,
+                DocumentType = view.DocumentType,
+                DocumentTypeId = view.DocumentTypeId,
+                Email = view.Email,
+                EmployeeCode = view.EmployeeCode,
+                EmployeeId = view.EmployeeId,
+                FirstName = view.FirstName,
+                LastName = view.LastName,
+                LoginType = view.LoginType,
+                LoginTypeId = view.LoginTypeId,
+                Phone = view.Phone,
+                Picture = view.Picture,
+            };
         }
 
         // GET: Employees/Edit/5
@@ -73,32 +107,70 @@ namespace TataApp.Backend.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Employee employee = await db.Employees.FindAsync(id);
+
+            var employee = await db.Employees.FindAsync(id);
+
             if (employee == null)
             {
                 return HttpNotFound();
             }
+
             ViewBag.DocumentTypeId = new SelectList(db.DocumentTypes, "DocumentTypeId", "Description", employee.DocumentTypeId);
             ViewBag.LoginTypeId = new SelectList(db.LoginTypes, "LoginTypeId", "Description", employee.LoginTypeId);
-            return View(employee);
+            var view = ToView(employee);
+            return View(view);
+        }
+
+        private EmployeeView ToView(Employee employee)
+        {
+            return new EmployeeView
+            {
+                Address = employee.Address,
+                Document = employee.Document,
+                DocumentType = employee.DocumentType,
+                DocumentTypeId = employee.DocumentTypeId,
+                Email = employee.Email,
+                EmployeeCode = employee.EmployeeCode,
+                EmployeeId = employee.EmployeeId,
+                FirstName = employee.FirstName,
+                LastName = employee.LastName,
+                LoginType = employee.LoginType,
+                LoginTypeId = employee.LoginTypeId,
+                Phone = employee.Phone,
+                Picture = employee.Picture,
+            };
         }
 
         // POST: Employees/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit([Bind(Include = "EmployeeId,FirstName,LastName,EmployeeCode,DocumentTypeId,LoginTypeId,Document,Picture,Email,Phone,Address")] Employee employee)
+        public async Task<ActionResult> Edit(EmployeeView view)
         {
             if (ModelState.IsValid)
             {
+                var pic = view.Picture;
+                var folder = "~/Content/Employees";
+
+                if (view.PictureFile != null)
+                {
+                    pic = FilesHelper.UploadPhoto(view.PictureFile, folder);
+                    pic = string.Format("{0}/{1}", folder, pic);
+                }
+
+                var employee = ToEmployee(view);
+                employee.Picture = pic;
                 db.Entry(employee).State = EntityState.Modified;
-                await db.SaveChangesAsync();
-                return RedirectToAction("Index");
+                var response = await DBHelper.SaveChanges(db);
+                if (response.Succeeded)
+                {
+                    return RedirectToAction("Index");
+                }
+
+                ModelState.AddModelError(string.Empty, response.Message);
             }
-            ViewBag.DocumentTypeId = new SelectList(db.DocumentTypes, "DocumentTypeId", "Description", employee.DocumentTypeId);
-            ViewBag.LoginTypeId = new SelectList(db.LoginTypes, "LoginTypeId", "Description", employee.LoginTypeId);
-            return View(employee);
+            ViewBag.DocumentTypeId = new SelectList(db.DocumentTypes, "DocumentTypeId", "Description", view.DocumentTypeId);
+            ViewBag.LoginTypeId = new SelectList(db.LoginTypes, "LoginTypeId", "Description", view.LoginTypeId);
+            return View(view);
         }
 
         // GET: Employees/Delete/5
@@ -108,7 +180,9 @@ namespace TataApp.Backend.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Employee employee = await db.Employees.FindAsync(id);
+
+            var employee = await db.Employees.FindAsync(id);
+
             if (employee == null)
             {
                 return HttpNotFound();
@@ -121,10 +195,16 @@ namespace TataApp.Backend.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            Employee employee = await db.Employees.FindAsync(id);
+            var employee = await db.Employees.FindAsync(id);
             db.Employees.Remove(employee);
-            await db.SaveChangesAsync();
-            return RedirectToAction("Index");
+            var response = await DBHelper.SaveChanges(db);
+            if (response.Succeeded)
+            {
+                return RedirectToAction("Index");
+            }
+
+            ModelState.AddModelError(string.Empty, response.Message);
+            return View(employee);
         }
 
         protected override void Dispose(bool disposing)

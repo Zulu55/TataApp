@@ -1,4 +1,4 @@
-﻿@model TataApp.Domain.Employee
+﻿@model TataApp.Backend.Models.EmployeeView
 
 @{
     ViewBag.Title = "Create";
@@ -6,8 +6,7 @@
 
 <h2>Create</h2>
 
-
-@using (Html.BeginForm()) 
+@using (Html.BeginForm("Create", "Employees", FormMethod.Post, new { enctype = "multipart/form-data" }))
 {
     @Html.AntiForgeryToken()
     
@@ -40,7 +39,7 @@
         </div>
 
         <div class="form-group">
-            @Html.LabelFor(model => model.DocumentTypeId, "DocumentTypeId", htmlAttributes: new { @class = "control-label col-md-2" })
+            @Html.LabelFor(model => model.DocumentTypeId, "Document Type", htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
                 @Html.DropDownList("DocumentTypeId", null, htmlAttributes: new { @class = "form-control" })
                 @Html.ValidationMessageFor(model => model.DocumentTypeId, "", new { @class = "text-danger" })
@@ -48,7 +47,7 @@
         </div>
 
         <div class="form-group">
-            @Html.LabelFor(model => model.LoginTypeId, "LoginTypeId", htmlAttributes: new { @class = "control-label col-md-2" })
+            @Html.LabelFor(model => model.LoginTypeId, "Login Type", htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
                 @Html.DropDownList("LoginTypeId", null, htmlAttributes: new { @class = "form-control" })
                 @Html.ValidationMessageFor(model => model.LoginTypeId, "", new { @class = "text-danger" })
@@ -64,10 +63,11 @@
         </div>
 
         <div class="form-group">
-            @Html.LabelFor(model => model.Picture, htmlAttributes: new { @class = "control-label col-md-2" })
+            @Html.LabelFor(model => model.PictureFile, htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
-                @Html.EditorFor(model => model.Picture, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.Picture, "", new { @class = "text-danger" })
+                <span class="btn btn-default btn-file">
+                    @Html.TextBoxFor(modelo => modelo.PictureFile, new { type = "file" })
+                </span>
             </div>
         </div>
 
@@ -76,6 +76,22 @@
             <div class="col-md-10">
                 @Html.EditorFor(model => model.Email, new { htmlAttributes = new { @class = "form-control" } })
                 @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Password, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Password, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Password, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.PasswordConfirm, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.PasswordConfirm, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.PasswordConfirm, "", new { @class = "text-danger" })
             </div>
         </div>
 

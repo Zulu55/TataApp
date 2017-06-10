@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Linq;
+﻿using System.Data.Entity;
 using System.Threading.Tasks;
 using System.Net;
-using System.Web;
 using System.Web.Mvc;
 using TataApp.Backend.Models;
 using TataApp.Domain;
+using TataApp.Backend.Helpers;
 
 namespace TataApp.Backend.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class DocumentTypesController : Controller
     {
         private DataContextLocal db = new DataContextLocal();
@@ -30,11 +26,14 @@ namespace TataApp.Backend.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            DocumentType documentType = await db.DocumentTypes.FindAsync(id);
+
+            var documentType = await db.DocumentTypes.FindAsync(id);
+
             if (documentType == null)
             {
                 return HttpNotFound();
             }
+
             return View(documentType);
         }
 
@@ -45,17 +44,20 @@ namespace TataApp.Backend.Controllers
         }
 
         // POST: DocumentTypes/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create([Bind(Include = "DocumentTypeId,Description")] DocumentType documentType)
+        public async Task<ActionResult> Create(DocumentType documentType)
         {
             if (ModelState.IsValid)
             {
                 db.DocumentTypes.Add(documentType);
-                await db.SaveChangesAsync();
-                return RedirectToAction("Index");
+                var response = await DBHelper.SaveChanges(db);
+                if (response.Succeeded)
+                {
+                    return RedirectToAction("Index");
+                }
+
+                ModelState.AddModelError(string.Empty, response.Message);
             }
 
             return View(documentType);
@@ -77,17 +79,20 @@ namespace TataApp.Backend.Controllers
         }
 
         // POST: DocumentTypes/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit([Bind(Include = "DocumentTypeId,Description")] DocumentType documentType)
+        public async Task<ActionResult> Edit(DocumentType documentType)
         {
             if (ModelState.IsValid)
             {
                 db.Entry(documentType).State = EntityState.Modified;
-                await db.SaveChangesAsync();
-                return RedirectToAction("Index");
+                var response = await DBHelper.SaveChanges(db);
+                if (response.Succeeded)
+                {
+                    return RedirectToAction("Index");
+                }
+
+                ModelState.AddModelError(string.Empty, response.Message);
             }
             return View(documentType);
         }
@@ -99,11 +104,14 @@ namespace TataApp.Backend.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            DocumentType documentType = await db.DocumentTypes.FindAsync(id);
+
+            var documentType = await db.DocumentTypes.FindAsync(id);
+
             if (documentType == null)
             {
                 return HttpNotFound();
             }
+
             return View(documentType);
         }
 
@@ -112,10 +120,16 @@ namespace TataApp.Backend.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            DocumentType documentType = await db.DocumentTypes.FindAsync(id);
+            var documentType = await db.DocumentTypes.FindAsync(id);
             db.DocumentTypes.Remove(documentType);
-            await db.SaveChangesAsync();
-            return RedirectToAction("Index");
+            var response = await DBHelper.SaveChanges(db);
+            if (response.Succeeded)
+            {
+                return RedirectToAction("Index");
+            }
+
+            ModelState.AddModelError(string.Empty, response.Message);
+            return View(documentType);
         }
 
         protected override void Dispose(bool disposing)

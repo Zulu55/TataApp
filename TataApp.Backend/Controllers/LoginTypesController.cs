@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Linq;
+﻿using System.Data.Entity;
 using System.Threading.Tasks;
 using System.Net;
-using System.Web;
 using System.Web.Mvc;
 using TataApp.Backend.Models;
 using TataApp.Domain;
+using TataApp.Backend.Helpers;
 
 namespace TataApp.Backend.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class LoginTypesController : Controller
     {
         private DataContextLocal db = new DataContextLocal();
@@ -30,11 +26,14 @@ namespace TataApp.Backend.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            LoginType loginType = await db.LoginTypes.FindAsync(id);
+
+            var loginType = await db.LoginTypes.FindAsync(id);
+
             if (loginType == null)
             {
                 return HttpNotFound();
             }
+
             return View(loginType);
         }
 
@@ -45,17 +44,20 @@ namespace TataApp.Backend.Controllers
         }
 
         // POST: LoginTypes/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create([Bind(Include = "LoginTypeId,Description")] LoginType loginType)
+        public async Task<ActionResult> Create(LoginType loginType)
         {
             if (ModelState.IsValid)
             {
                 db.LoginTypes.Add(loginType);
-                await db.SaveChangesAsync();
-                return RedirectToAction("Index");
+                var response = await DBHelper.SaveChanges(db);
+                if (response.Succeeded)
+                {
+                    return RedirectToAction("Index");
+                }
+
+                ModelState.AddModelError(string.Empty, response.Message);
             }
 
             return View(loginType);
@@ -77,17 +79,20 @@ namespace TataApp.Backend.Controllers
         }
 
         // POST: LoginTypes/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit([Bind(Include = "LoginTypeId,Description")] LoginType loginType)
+        public async Task<ActionResult> Edit(LoginType loginType)
         {
             if (ModelState.IsValid)
             {
                 db.Entry(loginType).State = EntityState.Modified;
-                await db.SaveChangesAsync();
-                return RedirectToAction("Index");
+                var response = await DBHelper.SaveChanges(db);
+                if (response.Succeeded)
+                {
+                    return RedirectToAction("Index");
+                }
+
+                ModelState.AddModelError(string.Empty, response.Message);
             }
             return View(loginType);
         }
@@ -99,11 +104,14 @@ namespace TataApp.Backend.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            LoginType loginType = await db.LoginTypes.FindAsync(id);
+
+            var loginType = await db.LoginTypes.FindAsync(id);
+
             if (loginType == null)
             {
                 return HttpNotFound();
             }
+
             return View(loginType);
         }
 
@@ -112,10 +120,16 @@ namespace TataApp.Backend.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            LoginType loginType = await db.LoginTypes.FindAsync(id);
+            var loginType = await db.LoginTypes.FindAsync(id);
             db.LoginTypes.Remove(loginType);
-            await db.SaveChangesAsync();
-            return RedirectToAction("Index");
+            var response = await DBHelper.SaveChanges(db);
+            if (response.Succeeded)
+            {
+                return RedirectToAction("Index");
+            }
+
+            ModelState.AddModelError(string.Empty, response.Message);
+            return View(loginType);
         }
 
         protected override void Dispose(bool disposing)
