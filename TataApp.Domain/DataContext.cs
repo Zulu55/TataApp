@@ -9,6 +9,7 @@ namespace TataApp.Domain
         {
         }
 
+        // Disable casading delete
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Conventions.Remove<OneToManyCascadeDeleteConvention>();

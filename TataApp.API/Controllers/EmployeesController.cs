@@ -55,13 +55,17 @@ namespace TataApp.API.Controllers
             Employee employee = null;
             if (emailOrCode.IndexOf('@') != -1)
             {
-                employee = await db.Employees.Where(e => e.Email.ToLower() == emailOrCode.ToLower()).FirstOrDefaultAsync();
+                employee = await db.Employees
+                    .Where(e => e.Email.ToLower() == emailOrCode.ToLower())
+                    .FirstOrDefaultAsync();
             }
             else
             {
                 int code;
                 int.TryParse(emailOrCode, out code);
-                employee = await db.Employees.Where(e => e.EmployeeCode == code).FirstOrDefaultAsync();
+                employee = await db.Employees
+                    .Where(e => e.EmployeeCode == code)
+                    .FirstOrDefaultAsync();
             }
 
             if (employee == null)
